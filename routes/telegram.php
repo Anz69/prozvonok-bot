@@ -43,6 +43,22 @@ $bot->onCallbackQueryData('adm:user', [AdminHandler::class, 'user']);
 $bot->onCallbackQueryData('adm:uban:{id}', [AdminHandler::class, 'banToggle']);
 $bot->onCallbackQueryData('adm:uprem:{id}', [AdminHandler::class, 'grantPremium']);
 $bot->onCallbackQueryData('adm:ubal:{id}', [AdminHandler::class, 'adjustBalance']);
+// настройки/тарифы/тексты
+$bot->onCallbackQueryData('adm:set:{key}', [AdminHandler::class, 'editSetting']);
+$bot->onCallbackQueryData('adm:tariffs', [AdminHandler::class, 'tariffs']);
+$bot->onCallbackQueryData('adm:tariff:{code}', [AdminHandler::class, 'editTariff']);
+$bot->onCallbackQueryData('adm:texts', [AdminHandler::class, 'texts']);
+$bot->onCallbackQueryData('adm:text:{key}', [AdminHandler::class, 'editText']);
+// выводы
+$bot->onCallbackQueryData('adm:withdrawals', [AdminHandler::class, 'withdrawals']);
+$bot->onCallbackQueryData('adm:wd:{id}', [AdminHandler::class, 'withdrawalShow']);
+$bot->onCallbackQueryData('adm:wdok:{id}', [AdminHandler::class, 'approveWithdrawal']);
+$bot->onCallbackQueryData('adm:wdno:{id}', [AdminHandler::class, 'rejectWithdrawal']);
+// тикеты
+$bot->onCallbackQueryData('adm:tickets', [AdminHandler::class, 'tickets']);
+$bot->onCallbackQueryData('adm:tk:{id}', [AdminHandler::class, 'ticketShow']);
+$bot->onCallbackQueryData('adm:tkreply:{id}', [AdminHandler::class, 'replyTicket']);
+$bot->onCallbackQueryData('adm:tkclose:{id}', [AdminHandler::class, 'closeTicket']);
 
 // Подтверждение/отмена оплаты менеджером (после открытия pay-диплинка; проверка прав внутри)
 $bot->onCallbackQueryData('paycfm:{uid}', [PaymentHandler::class, 'confirmManager']);

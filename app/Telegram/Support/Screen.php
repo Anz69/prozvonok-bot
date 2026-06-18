@@ -110,14 +110,14 @@ class Screen
         $user->update(['state' => $state]);
     }
 
-    /** Кнопки навигации для подэкранов: ⬅️ Назад (target) + 🏠 Главная. */
+    /** Кнопки навигации для подэкранов: ⬅️ Назад (target) + 🏠 Главное меню. */
     public static function navRow(string $backTarget = 'home'): array
     {
         $row = [];
-        if ($backTarget !== '') {
+        if ($backTarget !== '' && $backTarget !== 'home') {
             $row[] = \SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton::make('⬅️ Назад', callback_data: 'nav:' . $backTarget);
         }
-        $row[] = \SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton::make('🏠 Главная', callback_data: 'nav:home');
+        $row[] = \SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton::make('🏠 Главное меню', callback_data: 'nav:home');
 
         return $row;
     }

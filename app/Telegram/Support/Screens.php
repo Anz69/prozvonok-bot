@@ -38,6 +38,18 @@ class Screens
         return $s;
     }
 
+    /** Список тарифов по ГЕО из настроек: «• 🇷🇺 RU — 9$» (цены берутся из БД). */
+    public static function priceList(): string
+    {
+        $geos = Geo::active()->orderBy('sort')->get();
+        if ($geos->isEmpty()) {
+            return '—';
+        }
+
+        return $geos->map(fn (Geo $g) => '• ' . trim(($g->flag ?? '') . ' ' . $g->code)
+            . ' — ' . self::money($g->price_per_1000) . '$')->implode("\n");
+    }
+
     private static function premiumLabel(BotUser $user): string
     {
         if (! $user->hasActivePremium()) {
@@ -79,7 +91,9 @@ class Screens
     {
         $text = BotText::render('welcome', [
             'name' => $user->first_name ?: ($user->username ?: 'друг'),
-            'free_numbers' => Setting::get('free_numbers', 100),
+            'free_numbers' => Setting::get('free_numbers', 200),
+            'max_numbers' => Setting::get('max_numbers', 100000),
+            'prices' => self::priceList(),
             'wh_start' => Setting::get('working_hours_start', 9),
             'wh_end' => Setting::get('working_hours_end', 21),
         ]);
@@ -116,11 +130,12 @@ class Screens
         ]);
 
         $kb = InlineKeyboardMarkup::make()
-            ->addRow(InlineKeyboardButton::make('🔍 Подробное досье', callback_data: 'nav:profile_full'))
+            ->addRow(InlineKeyboardButton::make('🔎 Подробнее', callback_data: 'nav:profile_full'))
             ->addRow(
                 InlineKeyboardButton::make('📅 История проверок', callback_data: 'nav:hist_checks'),
-                InlineKeyboardButton::make('💳 История баланса', callback_data: 'nav:hist_balance'),
-            );
+                InlineKeyboardButton::make('🧾 История баланса', callback_data: 'nav:hist_balance'),
+            )
+            ->addRow(...Screen::navRow('home'));
 
         return ['text' => $text, 'keyboard' => $kb];
     }
@@ -156,7 +171,7 @@ class Screens
             'support_url' => Setting::get('support_url'),
         ]);
 
-        return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()];
+        return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()->addRow(...Screen::navRow('profile'))];
     }
 
     public static function historyChecks(BotUser $user): array
@@ -172,7 +187,7 @@ class Screens
                 $j->status,
             ))->implode("\n");
 
-        return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()];
+        return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()->addRow(...Screen::navRow('profile'))];
     }
 
     public static function historyBalance(BotUser $user): array
@@ -188,7 +203,7 @@ class Screens
                 $t->type,
             ))->implode("\n");
 
-        return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()];
+        return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()->addRow(...Screen::navRow('profile'))];
     }
 
     public static function balance(BotUser $user): array
@@ -213,6 +228,7 @@ class Screens
         if ($user->canWithdraw()) {
             $kb->addRow(InlineKeyboardButton::make('💸 Вывести', callback_data: 'act:withdraw'));
         }
+        $kb->addRow(...Screen::navRow('home'));
 
         return ['text' => $text, 'keyboard' => $kb];
     }
@@ -228,7 +244,8 @@ class Screens
         ]);
 
         return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()
-            ->addRow(InlineKeyboardButton::make('🔍 Подробнее', callback_data: 'nav:referral_details'))];
+            ->addRow(InlineKeyboardButton::make('🔎 Подробнее', callback_data: 'nav:referral_details'))
+            ->addRow(...Screen::navRow('home'))];
     }
 
     public static function referralDetails(BotUser $user): array
@@ -251,7 +268,8 @@ class Screens
         ]);
 
         return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()
-            ->addRow(InlineKeyboardButton::make('📈 Запрос %', callback_data: 'act:percent'))];
+            ->addRow(InlineKeyboardButton::make('📈 Запрос %', callback_data: 'act:percent'))
+            ->addRow(...Screen::navRow('referral'))];
     }
 
     public static function premium(BotUser $user): array
@@ -269,13 +287,15 @@ class Screens
                 InlineKeyboardButton::make('💎 Премиум', callback_data: 'act:prem:premium'),
                 InlineKeyboardButton::make('💠 Премиум+', callback_data: 'act:prem:premium_plus'),
             )
-            ->addRow(InlineKeyboardButton::make('✨ Пробный премиум', callback_data: 'act:prem_trial'))];
+            ->addRow(InlineKeyboardButton::make('✨ Пробный премиум', callback_data: 'act:prem_trial'))
+            ->addRow(...Screen::navRow('home'))];
     }
 
     public static function info(): array
     {
         $text = BotText::render('info', [
             'max_numbers' => Setting::get('max_numbers', 100000),
+            'prices' => self::priceList(),
             'wh_start' => Setting::get('working_hours_start', 9),
             'wh_end' => Setting::get('working_hours_end', 21),
             'faq_url' => Setting::get('faq_url'),
@@ -286,6 +306,7 @@ class Screens
         ]);
 
         return ['text' => $text, 'keyboard' => InlineKeyboardMarkup::make()
-            ->addRow(InlineKeyboardButton::make('✉️ Поддержка', callback_data: 'act:support'))];
+            ->addRow(InlineKeyboardButton::make('✉️ Поддержка', callback_data: 'act:support'))
+            ->addRow(...Screen::navRow('home'))];
     }
 }

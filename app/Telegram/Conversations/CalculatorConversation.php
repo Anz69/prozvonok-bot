@@ -28,7 +28,7 @@ class CalculatorConversation extends BotConversation
 
     public function start(Nutgram $bot): void
     {
-        $this->screen($bot, BotText::render('calculator'), $this->geoKeyboard());
+        $this->screen($bot, BotText::render('calculator', ['prices' => Screens::priceList()]), $this->geoKeyboard());
         $this->next('chooseGeo');
     }
 

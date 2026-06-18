@@ -50,7 +50,7 @@ class SettingsSeeder extends Seeder
             ]), 'json', 'integration', 'Маппинг статусов Звонок.com (call status → answered/no_answer)'],
 
             // --- Акция «первые N бесплатно» ---
-            ['free_numbers', 100, 'int', 'promo', 'Бесплатных номеров новому пользователю'],
+            ['free_numbers', 200, 'int', 'promo', 'Бесплатных номеров новому пользователю'],
             ['free_numbers_once', true, 'bool', 'promo', 'Бесплатные номера — разово на пользователя'],
 
             // --- Финансы ---

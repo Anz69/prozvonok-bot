@@ -104,7 +104,11 @@ docker compose up -d --build
 
 echo "==> Установка зависимостей в контейнере…"
 docker compose exec -T app composer install --no-dev --optimize-autoloader --no-interaction || true
-docker compose exec -T app chmod -R 777 storage bootstrap/cache || true
+docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache || true
+docker compose exec -T app chmod -R 775 storage bootstrap/cache || true
+docker compose exec -T app php artisan config:clear || true
+docker compose exec -T app php artisan view:clear || true
+docker compose exec -T app php artisan filament:upgrade --ansi || true
 
 echo "==> Ожидание базы данных…"
 for i in $(seq 1 40); do
