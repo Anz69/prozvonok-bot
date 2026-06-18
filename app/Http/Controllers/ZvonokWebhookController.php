@@ -23,7 +23,8 @@ class ZvonokWebhookController extends Controller
         }
 
         $payload = $request->all();
-        $phone = (string) ($request->input('phone') ?? '');
+        // Звонок.com шлёт postback с префиксом ct_ (ct_phone, ct_status, ct_dial_status, ...)
+        $phone = (string) ($request->input('ct_phone') ?? $request->input('phone') ?? '');
 
         // Находим номер задания по телефону (среди активных заданий)
         $number = CheckNumber::where('phone', $phone)
@@ -45,16 +46,22 @@ class ZvonokWebhookController extends Controller
 
         $job = $number->checkJob;
         $map = (array) Setting::get('zvonok_status_map', []);
-        $rawStatus = (string) ($request->input('status') ?? '');
+        $rawStatus = (string) ($request->input('ct_status') ?? $request->input('status') ?? '');
+        $mapped = $map[$rawStatus] ?? null;
+
+        if ($mapped === null) {
+            // ещё не финальный статус (in_process) — фиксируем сырьё, номер оставляем в очереди
+            return response()->json(['ok' => true]);
+        }
 
         $results->applyOne($job, $phone, [
-            'status' => $map[$rawStatus] ?? CheckNumber::STATUS_NO_ANSWER,
-            'operator' => $request->input('operator'),
-            'mnp_operator' => $request->input('mnp_operator'),
-            'is_active' => $request->boolean('is_active'),
-            'timezone' => $request->input('timezone'),
-            'last_status' => $request->input('last_status'),
-            'transcription' => $request->input('transcription'),
+            'status' => $mapped,
+            'operator' => $request->input('ct_phone_oper') ?? $request->input('operator'),
+            'mnp_operator' => $request->input('ct_mnp_oper'),
+            'is_active' => $mapped === CheckNumber::STATUS_ANSWERED,
+            'timezone' => $request->input('ct_phone_region'),
+            'last_status' => $rawStatus,
+            'transcription' => $request->input('ct_recognized_speech') ?? $request->input('ct_data'),
             'raw' => $payload,
         ]);
 

@@ -17,7 +17,7 @@ return [
     // Звонок.com — интеграция обзвона (Part 3)
     'zvonok' => [
         'driver'       => env('ZVONOK_DRIVER', 'fake'), // fake | http
-        'base_url'     => env('ZVONOK_BASE_URL', 'https://zvonok.com/api/v1'),
+        'base_url'     => env('ZVONOK_BASE_URL', 'https://zvonok.com/manager/cabapi_external/api/v1'),
         'api_key'      => env('ZVONOK_API_KEY'),
         'campaign_id'  => env('ZVONOK_CAMPAIGN_ID'),
         'rate_limit'   => (int) env('ZVONOK_RATE_LIMIT', 20), // запросов в секунду (лимит API)

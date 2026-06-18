@@ -40,9 +40,14 @@ class SettingsSeeder extends Seeder
 
             // --- Звонок.com: маппинг статусов сервиса → answered/no_answer (раздел 4.4, TODO уточнить ключи) ---
             ['zvonok_status_map', json_encode([
-                'answered' => 'answered', 'completed' => 'answered', 'success' => 'answered',
-                'no_answer' => 'no_answer', 'busy' => 'no_answer', 'failed' => 'no_answer', 'voicemail' => 'no_answer',
-            ]), 'json', 'integration', 'Маппинг статусов Звонок.com'],
+                // call status Звонок.com → наш статус (in_process не указываем — значит «ещё в процессе»)
+                'compl_finished' => 'answered',   // дозвонились, сценарий завершён
+                'compl_nofinished' => 'answered', // ответили, но не до конца
+                'user' => 'answered',             // ответил абонент
+                'attempts_exc' => 'no_answer',    // исчерпаны попытки
+                'novalid_button' => 'no_answer',
+                'deleted' => 'no_answer',
+            ]), 'json', 'integration', 'Маппинг статусов Звонок.com (call status → answered/no_answer)'],
 
             // --- Акция «первые N бесплатно» ---
             ['free_numbers', 100, 'int', 'promo', 'Бесплатных номеров новому пользователю'],
