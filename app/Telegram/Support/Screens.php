@@ -23,9 +23,19 @@ class Screens
     /** Действия, открывающие диалог (а не статический экран). */
     private const CONVERSATIONS = ['check_base', 'calculator', 'topup'];
 
+    /**
+     * Деньги «по-человечески»: до 5 знаков, без хвостовых нулей, с разделителем тысяч.
+     * 5000.00000 → «5 000», 0.85000 → «0.85», 0.03600 → «0.036», 1234.5 → «1 234.5».
+     */
     public static function money(float|string $v): string
     {
-        return number_format((float) $v, 5, '.', '');
+        $s = number_format((float) $v, 5, '.', ' ');
+
+        if (str_contains($s, '.')) {
+            $s = rtrim(rtrim($s, '0'), '.');
+        }
+
+        return $s;
     }
 
     private static function premiumLabel(BotUser $user): string

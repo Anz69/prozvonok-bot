@@ -57,8 +57,8 @@ class AdminBalanceConversation extends BotConversation
         $sign = $amount > 0 ? '+' : '−';
         app(\App\Telegram\Support\Notifier::class)->notify(
             $user,
-            "ℹ️ Баланс изменён администратором: <b>{$sign}" . number_format(abs($amount), 5, '.', '')
-            . "\$</b>.\nТекущий депозит: {$tx->balance_after}\$",
+            "ℹ️ Баланс изменён администратором: <b>{$sign}" . \App\Telegram\Support\Screens::money(abs($amount))
+            . "\$</b>.\nТекущий депозит: " . \App\Telegram\Support\Screens::money($tx->balance_after) . '$',
         );
 
         Screen::show($bot, AdminUserLookupConversation::card($user->fresh()), AdminUserLookupConversation::actions($user->fresh()));
