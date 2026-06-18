@@ -103,19 +103,27 @@ echo "==> Сборка и запуск контейнеров…"
 docker compose up -d --build
 
 echo "==> Установка зависимостей в контейнере…"
-docker compose exec -T app composer install --no-dev --optimize-autoloader --no-interaction
-docker compose exec -T app chmod -R 777 storage bootstrap/cache
+docker compose exec -T app composer install --no-dev --optimize-autoloader --no-interaction || true
+docker compose exec -T app chmod -R 777 storage bootstrap/cache || true
 
 echo "==> Ожидание базы данных…"
-until docker compose exec -T db mysqladmin ping -h127.0.0.1 --silent >/dev/null 2>&1; do
+for i in $(seq 1 40); do
+    if docker compose exec -T db sh -c 'mysqladmin ping -uroot -p"$MYSQL_ROOT_PASSWORD" --silent' >/dev/null 2>&1; then
+        break
+    fi
     sleep 3
 done
 
 echo "==> Миграции и сидеры…"
 docker compose exec -T app php artisan migrate --force --seed
 
+echo "==> Сброс webhook (нужен polling) и проверка токена…"
+docker compose exec -T app php artisan tinker --execute='try{$b=app(SergiX44\Nutgram\Nutgram::class);$b->deleteWebhook();$m=$b->getMe();echo "OK @".$m->username;}catch(\Throwable $e){echo "TG ERROR: ".$e->getMessage();}' || true
+
 echo "==> Перезапуск бота/воркеров…"
 docker compose restart bot queue scheduler
+sleep 5
+docker compose logs --tail=15 bot || true
 
 IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 echo
