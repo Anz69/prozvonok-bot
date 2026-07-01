@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+
+/* Тёмная тема по классу .dark на <html> (управляется useTheme) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Светлая (по умолчанию) */
+:root {
+    --c-bg: #F6F7F9;
+    --c-surface: #FFFFFF;
+    --c-elevated: #FFFFFF;
+    --c-fg: #0F172A;
+    --c-muted: #5B6675;
+    --c-border: #E6E9EF;
+    --c-accent: #E5484D;
+    --c-accent-fg: #FFFFFF;
+    --c-success: #10B981;
+    --c-danger: #EF4444;
+    --c-warn: #F59E0B;
+    --c-ring: rgba(229, 72, 77, 0.35);
+}
+
+/* Тёмная (OLED) */
+.dark {
+    --c-bg: #0B0F14;
+    --c-surface: #131A22;
+    --c-elevated: #1B2430;
+    --c-fg: #F2F5F8;
+    --c-muted: #8A97A6;
+    --c-border: rgba(255, 255, 255, 0.08);
+    --c-accent: #FF5C5C;
+    --c-accent-fg: #FFFFFF;
+    --c-success: #34D399;
+    --c-danger: #F87171;
+    --c-warn: #FBBF24;
+    --c-ring: rgba(255, 92, 92, 0.45);
+}
+
+@theme inline {
+    --color-bg: var(--c-bg);
+    --color-surface: var(--c-surface);
+    --color-elevated: var(--c-elevated);
+    --color-fg: var(--c-fg);
+    --color-muted: var(--c-muted);
+    --color-border: var(--c-border);
+    --color-accent: var(--c-accent);
+    --color-accent-fg: var(--c-accent-fg);
+    --color-success: var(--c-success);
+    --color-danger: var(--c-danger);
+    --color-warn: var(--c-warn);
+
+    --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+
+    --radius-xl: 1rem;
+    --radius-2xl: 1.25rem;
+}
+
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+        color-scheme: light dark;
+    }
+
+    body {
+        margin: 0;
+        background-color: var(--c-bg);
+        color: var(--c-fg);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        overscroll-behavior-y: none;
+    }
+
+    /* тонкий скроллбар */
+    ::-webkit-scrollbar { width: 0; height: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.001ms !important;
+            transition-duration: 0.001ms !important;
+        }
+    }
+}
+
+@utility tabular {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Глобальные переходы для <Transition name="..."> в любом компоненте.
+   Только opacity/transform → плавно и без рывков.
+   --------------------------------------------------------------------------- */
+
+/* Простое появление/исчезновение */
+.fade-enter-active,
+.fade-leave-active { transition: opacity 0.22s ease; }
+.fade-enter-from,
+.fade-leave-to { opacity: 0; }
+
+/* Смена крупных блоков (форма ↔ результат). Использовать с mode="out-in". */
+.swap-enter-active { transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+.swap-leave-active { transition: opacity 0.16s ease, transform 0.16s ease; }
+.swap-enter-from { opacity: 0; transform: translate3d(0, 12px, 0); }
+.swap-leave-to { opacity: 0; transform: translate3d(0, -8px, 0); }
+
+/* Сообщения валидации / появляющиеся карточки (двигают поток — это ок). */
+.msg-enter-active { transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+.msg-leave-active { transition: opacity 0.15s ease, transform 0.15s ease; }
+.msg-enter-from,
+.msg-leave-to { opacity: 0; transform: translate3d(0, -6px, 0); }
+
+/* Мелкие элементы — иконки/бейджи (scale + fade). Использовать с mode="out-in". */
+.pop-enter-active { transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.pop-leave-active { transition: opacity 0.12s ease, transform 0.12s ease; }
+.pop-enter-from,
+.pop-leave-to { opacity: 0; transform: scale(0.6); }
+
+@media (prefers-reduced-motion: reduce) {
+    .fade-enter-active, .fade-leave-active,
+    .swap-enter-active, .swap-leave-active,
+    .msg-enter-active, .msg-leave-active,
+    .pop-enter-active, .pop-leave-active { transition: none; }
+}

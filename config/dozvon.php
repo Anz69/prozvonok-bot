@@ -14,6 +14,10 @@ return [
     // Telegram
     'bot_username' => env('TELEGRAM_BOT_USERNAME', 'DozvonRfRbKz_Bot'),
 
+    // Mini App (Telegram WebApp) — HTTPS-ссылка на веб-интерфейс /app.
+    // Пусто = кнопка запуска не показывается (например, локально без HTTPS).
+    'miniapp_url' => env('MINIAPP_URL'),
+
     // Звонок.com — интеграция обзвона (Part 3)
     'zvonok' => [
         'driver'       => env('ZVONOK_DRIVER', 'fake'), // fake | http

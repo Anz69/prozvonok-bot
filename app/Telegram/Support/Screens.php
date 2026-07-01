@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use App\Services\PricingService;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
+use SergiX44\Nutgram\Telegram\Types\WebApp\WebAppInfo;
 
 /**
  * Контент экранов бота (режим «одного сообщения»). Каждый метод возвращает
@@ -99,6 +100,12 @@ class Screens
         ]);
 
         $kb = InlineKeyboardMarkup::make();
+
+        // Кнопка запуска Mini App (только если задан HTTPS-URL).
+        if ($url = config('dozvon.miniapp_url')) {
+            $kb->addRow(InlineKeyboardButton::make('🚀 Открыть приложение', web_app: WebAppInfo::make(url: $url)));
+        }
+
         $rows = collect(BotButton::menu('main'))->groupBy('row')->sortKeys();
         foreach ($rows as $rowButtons) {
             $buttons = collect($rowButtons)->sortBy('sort')->map(function ($b) {

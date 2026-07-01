@@ -92,18 +92,62 @@ php artisan schedule:work    # payments:poll, premium:expire, checks:*
 `USDT_PROVIDER=tronscan` + `USDT_WALLET`, `ZVONOK_POSTBACK_SECRET` (для webhook).
 Точные эндпоинты/поля помечены `// TODO` в `HttpZvonokClient`/`TronscanWatcher`.
 
-## Деплой (Docker)
+## Деплой одной командой (прод, radistka.pro за Cloudflare)
+
+На чистом Ubuntu-сервере (нужен только Docker — скрипт поставит сам):
+
+```bash
+APP_DOMAIN=radistka.pro \
+TELEGRAM_TOKEN=<токен_бота> \
+TELEGRAM_BOT_USERNAME=<username_без_@> \
+ADMIN_IDS=<ваш_telegram_id> \
+MANAGER_URL=https://t.me/<менеджер> \
+bash <(curl -fsSL https://raw.githubusercontent.com/Anz69/prozvonok-bot/main/deploy/install.sh)
+```
+
+Скрипт: ставит Docker → тянет код → генерит `.env` (APP_URL/MINIAPP_URL/секреты) →
+собирает фронт (Vite во временном `node`-контейнере) → поднимает весь стек
+(app + nginx + **caddy** + mysql + redis + queue + scheduler + bot) → миграции и сидеры →
+сбрасывает webhook (бот на long-polling) → ставит кнопку-меню бота на Mini App.
+
+**Cloudflare (обязательно 2 настройки для radistka.pro):**
+1. **DNS** → A-запись `radistka.pro` → IP сервера, проксирование **включено** (оранжевое облако).
+2. **SSL/TLS → Overview → режим `Full`** (не Flexible и не Full strict).
+   Caddy на сервере отдаёт HTTPS с self-signed сертификатом (`tls internal`), Cloudflare
+   его принимает в режиме Full и терминирует TLS для браузера. Никаких Let's Encrypt/ACME.
+
+После деплоя:
+- Mini App: `https://radistka.pro/app` (кнопка «Открыть приложение» в боте).
+- Админка: `https://radistka.pro/admin` (логин/пароль — в `.env`, `ADMIN_*`).
+- Постбэк Звонок.com: `POST https://radistka.pro/webhooks/zvonok/<ZVONOK_POSTBACK_SECRET>`.
+
+> Порты 80/443 на сервере должны быть открыты для Cloudflare. Обновление —
+> повторный запуск той же команды (код подтянется `git pull`, `.env` не перезапишется).
+
+## Деплой (Docker, вручную / локально)
 
 ```bash
 cp .env.example .env          # выставьте DB_*, REDIS_*, TELEGRAM_TOKEN, ключи интеграций
-docker compose up -d --build  # app + nginx + mysql + redis + queue + scheduler
+docker compose up -d --build  # app + nginx + caddy + mysql + redis + queue + scheduler
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate --seed
-docker compose exec app php artisan bot:webhook:set https://ваш-домен/<TOKEN>
 ```
 
-Приложение — на `http://localhost:8080`, админка — `/admin`. Сервисы `queue` и `scheduler`
-поднимаются автоматически. Постбэк Звонок.com: `POST /webhooks/zvonok/<ZVONOK_POSTBACK_SECRET>`.
+Без домена (`APP_DOMAIN` не задан) приложение доступно на `http://localhost:8080`,
+админка — `/admin`. Сервисы `queue` и `scheduler` поднимаются автоматически.
+
+## Mini App (Telegram WebApp)
+
+Веб-интерфейс бота (`/app`) на Vue 3 + Inertia + Tailwind v4 + GSAP: баланс, проверка базы,
+пополнение, калькулятор, профиль, рефералы. Тёмная/светлая тема (синхрон с Telegram + тумблер).
+
+Сборка фронтенда: `npm ci && npm run build` (для прод) или `npm run dev` (HMR). Telegram
+требует **HTTPS** — его даёт Cloudflare, а `caddy` на origin отдаёт HTTPS с self-signed
+(`tls internal`) при Cloudflare SSL = **Full**. Всё это делает `deploy/install.sh` (см. выше).
+Кнопка-меню бота ставится командой `docker compose exec app php artisan bot:menu:set`.
+
+**Локальный тест в браузере** (без Telegram): при `APP_ENV=local` вход в `/app` происходит
+тест-юзером «Local Tester» — `php artisan serve` → открыть `http://localhost:8000/app`.
 
 ## Тесты
 

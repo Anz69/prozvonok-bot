@@ -12,6 +12,18 @@ DIR="${DIR:-/opt/prozvonok-bot}"
 : "${TELEGRAM_TOKEN:?Укажите TELEGRAM_TOKEN}"
 
 TELEGRAM_BOT_USERNAME="${TELEGRAM_BOT_USERNAME:-}"
+# Домен для HTTPS (за Cloudflare, режим SSL "Full"). Нужен для Telegram Mini App.
+# По умолчанию — radistka.pro. APP_URL/MINIAPP_URL формируются автоматически.
+APP_DOMAIN="${APP_DOMAIN:-radistka.pro}"
+if [ -n "${APP_DOMAIN}" ]; then
+    APP_URL="${APP_URL:-https://${APP_DOMAIN}}"
+    MINIAPP_URL="${MINIAPP_URL:-${APP_URL}/app}"
+    SESSION_SECURE_COOKIE="true"
+else
+    APP_URL="${APP_URL:-http://localhost}"
+    MINIAPP_URL="${MINIAPP_URL:-}"
+    SESSION_SECURE_COOKIE="false"
+fi
 ADMIN_IDS="${ADMIN_IDS:-}"
 MANAGER_URL="${MANAGER_URL:-}"
 CHANNEL_URL="${CHANNEL_URL:-}"
@@ -50,8 +62,13 @@ APP_NAME="Prozvonok"
 APP_ENV=production
 APP_KEY=${APP_KEY}
 APP_DEBUG=false
-APP_URL=http://localhost
+APP_URL=${APP_URL}
+APP_DOMAIN=${APP_DOMAIN}
 APP_LOCALE=ru
+
+# --- Mini App (Telegram WebApp) ---
+# HTTPS-ссылка на /app. Пусто = кнопка запуска не показывается.
+MINIAPP_URL=${MINIAPP_URL}
 
 LOG_CHANNEL=stack
 LOG_LEVEL=info
@@ -65,6 +82,7 @@ DB_PASSWORD=${DB_PASSWORD}
 DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
 
 SESSION_DRIVER=database
+SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE}
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 REDIS_HOST=redis
@@ -99,6 +117,11 @@ ENV
     echo "    Пароль админ-панели сохранён в .env (ADMIN_PASSWORD=${ADMIN_PASSWORD})"
 fi
 
+echo "==> Сборка фронтенда Mini App (Vite)…"
+# Node не ставим на хост — собираем во временном контейнере. Ассеты ложатся в ./public/build
+# (этот же каталог монтируется в app/nginx), поэтому доступны без пересборки образа.
+docker run --rm -v "${DIR}:/app" -w /app node:22-alpine sh -c 'npm ci && npm run build'
+
 echo "==> Сборка и запуск контейнеров…"
 docker compose up -d --build
 
@@ -124,6 +147,11 @@ docker compose exec -T app php artisan migrate --force --seed
 echo "==> Сброс webhook (нужен polling) и проверка токена…"
 docker compose exec -T app php artisan tinker --execute='try{$b=app(SergiX44\Nutgram\Nutgram::class);$b->deleteWebhook();$m=$b->getMe();echo "OK @".$m->username;}catch(\Throwable $e){echo "TG ERROR: ".$e->getMessage();}' || true
 
+if [ -n "${MINIAPP_URL}" ]; then
+    echo "==> Настройка кнопки-меню бота на Mini App (${MINIAPP_URL})…"
+    docker compose exec -T app php artisan bot:menu:set "${MINIAPP_URL}" || true
+fi
+
 echo "==> Перезапуск бота/воркеров…"
 docker compose restart bot queue scheduler
 sleep 5
@@ -134,6 +162,11 @@ echo
 echo "================================================================"
 echo " ✅ Готово!"
 echo " Бот: long-polling запущен (сервис bot)."
+if [ -n "${MINIAPP_URL}" ]; then
+    echo " Mini App: ${MINIAPP_URL} (кнопка «🚀 Открыть приложение» в боте)"
+else
+    echo " Mini App: отключён (задайте APP_DOMAIN для HTTPS, чтобы включить)"
+fi
 echo " Админка: http://${IP:-SERVER_IP}:8080/admin"
 echo "   логин:  admin@prozvonok.local"
 echo "   пароль: см. ADMIN_PASSWORD в ${DIR}/.env"

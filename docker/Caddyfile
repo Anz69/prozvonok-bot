@@ -1,0 +1,16 @@
+# Caddy за Cloudflare. CF терминирует TLS для браузера, а до origin идёт по HTTPS
+# с самоподписанным сертификатом (Caddy `tls internal`) — режим Cloudflare SSL = "Full".
+# Никаких Let's Encrypt/ACME (за оранжевым облаком они конфликтуют).
+#
+# APP_DOMAIN=radistka.pro. Локально без домена — localhost (тоже self-signed).
+{$APP_DOMAIN:localhost} {
+	tls internal
+	encode zstd gzip
+
+	# крупные загрузки баз номеров
+	request_body {
+		max_size 25MB
+	}
+
+	reverse_proxy nginx:80
+}

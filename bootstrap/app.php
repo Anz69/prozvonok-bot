@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // За Cloudflare + Caddy/nginx: доверяем прокси, чтобы Laravel видел https
+        // (X-Forwarded-Proto) и корректно строил ссылки/куки/сессии.
+        $middleware->trustProxies(at: '*');
+
         // Вебхуки внешних сервисов — без CSRF (защита своим секретом)
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
