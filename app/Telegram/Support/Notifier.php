@@ -72,8 +72,8 @@ class Notifier
                 caption: $caption !== '' ? $caption : null,
                 parse_mode: ParseMode::HTML,
             );
-
-            Screen::repostFor($bot, $user); // управление — ниже выданного файла
+            // После файла НЕ репостим стартовый экран (по фидбэку) — навигация остаётся
+            // на постоянной нижней клавиатуре, чтобы «менюшка» не мигала после результата.
         } catch (Throwable $e) {
             report($e);
         }

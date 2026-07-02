@@ -67,21 +67,22 @@ class WorkingHours
         return $start->addMinutes($minutes);
     }
 
-    /** Человеко-читаемая метка готовности: «к 16:35», «завтра к 09:20», «05.07 в 09:20». */
+    /**
+     * Мягкая метка готовности для пользователя (без пугающего точного времени):
+     * в рабочее время — «обычно в течение 15–30 минут», вне — «после 09:00».
+     */
     public function etaLabel(string $timezone, int $numbers): string
     {
+        if (! $this->isWithin($timezone)) {
+            return sprintf('после %02d:00 по часовому поясу абонента', $this->start());
+        }
+
         $tz = $this->safeTz($timezone);
-        $eta = $this->estimatedReadyAt($timezone, $numbers)->setTimezone($tz);
-        $now = CarbonImmutable::now($tz);
+        $mins = max(5, (int) round($this->estimatedReadyAt($timezone, $numbers)->diffInMinutes(CarbonImmutable::now($tz))));
+        $low = max(5, (int) floor($mins / 5) * 5);
+        $high = $low + 15;
 
-        if ($eta->isSameDay($now)) {
-            return 'к ' . $eta->format('H:i');
-        }
-        if ($eta->isSameDay($now->addDay())) {
-            return 'завтра к ' . $eta->format('H:i');
-        }
-
-        return $eta->format('d.m в H:i');
+        return "обычно в течение {$low}–{$high} минут";
     }
 
     private function safeTz(string $timezone): string
