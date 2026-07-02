@@ -176,6 +176,7 @@ class MiniAppController extends Controller
             'within' => $within,
             'valid' => $valid,
             'cost' => $quote['cost'],
+            'eta' => $hours->etaLabel($user->timezone, $valid),
         ]);
     }
 

@@ -109,8 +109,12 @@ async function confirm() {
                 <p class="mt-1 text-sm text-muted">
                     {{ num(done.valid) }} номеров · списано <Money :value="done.cost" />
                 </p>
-                <p class="mt-1 text-sm text-muted">
-                    {{ done.within ? 'Результат придёт отдельным файлом.' : 'Стартует после 9:00 по часовому поясу абонента.' }}
+                <p v-if="done.eta" class="mt-2 text-sm font-medium">
+                    Файл придёт {{ done.eta }}
+                    <span class="text-muted">(по часовому поясу абонента)</span>
+                </p>
+                <p class="mt-1 text-xs text-muted">
+                    {{ done.within ? 'Результат придёт отдельным файлом в бота.' : 'Стартует после 9:00 по часовому поясу абонента.' }}
                 </p>
             </Card>
         </Transition>

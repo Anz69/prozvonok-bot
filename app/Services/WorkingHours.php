@@ -50,6 +50,40 @@ class WorkingHours
         return $todayStart;
     }
 
+    /**
+     * Примерный момент готовности файла: старт (сейчас либо начало рабочего окна)
+     * + средняя обработка + время на объём базы.
+     */
+    public function estimatedReadyAt(string $timezone, int $numbers): CarbonImmutable
+    {
+        $start = $this->isWithin($timezone)
+            ? CarbonImmutable::now($this->safeTz($timezone))
+            : $this->nextStart($timezone);
+
+        $avg = (int) Setting::get('avg_processing_minutes', 15);
+        $perMin = max(1, (int) Setting::get('check_numbers_per_minute', 100));
+        $minutes = $avg + (int) ceil(max(0, $numbers) / $perMin);
+
+        return $start->addMinutes($minutes);
+    }
+
+    /** Человеко-читаемая метка готовности: «к 16:35», «завтра к 09:20», «05.07 в 09:20». */
+    public function etaLabel(string $timezone, int $numbers): string
+    {
+        $tz = $this->safeTz($timezone);
+        $eta = $this->estimatedReadyAt($timezone, $numbers)->setTimezone($tz);
+        $now = CarbonImmutable::now($tz);
+
+        if ($eta->isSameDay($now)) {
+            return 'к ' . $eta->format('H:i');
+        }
+        if ($eta->isSameDay($now->addDay())) {
+            return 'завтра к ' . $eta->format('H:i');
+        }
+
+        return $eta->format('d.m в H:i');
+    }
+
     private function safeTz(string $timezone): string
     {
         return in_array($timezone, timezone_identifiers_list(), true) ? $timezone : 'Europe/Moscow';

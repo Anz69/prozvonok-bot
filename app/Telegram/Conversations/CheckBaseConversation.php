@@ -246,6 +246,7 @@ class CheckBaseConversation extends BotConversation
                 'wh_end' => $hours->end(),
             ]);
         }
+        $text .= "\n\n⏱ Файл придёт примерно {$hours->etaLabel($user->timezone, $this->valid)} (по часовому поясу абонента)";
         $this->screen($bot, $text, $this->homeKb());
         $this->end();
     }

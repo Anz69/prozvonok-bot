@@ -16,7 +16,8 @@ class GeoSeeder extends Seeder
         ];
 
         foreach ($geos as $geo) {
-            Geo::updateOrCreate(['code' => $geo['code']], $geo);
+            // firstOrCreate: сеем дефолты только на пустую БД, не затираем правки цен из админки
+            Geo::firstOrCreate(['code' => $geo['code']], $geo);
         }
     }
 }

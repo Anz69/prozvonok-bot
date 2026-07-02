@@ -14,7 +14,9 @@ class BotTextSeeder extends Seeder
     public function run(): void
     {
         foreach ($this->texts() as [$key, $content, $description, $placeholders]) {
-            BotText::updateOrCreate(
+            // firstOrCreate: сеем дефолтные тексты только на пустую БД,
+            // не затираем правки из админки/tinker при повторном --seed на деплое.
+            BotText::firstOrCreate(
                 ['key' => $key],
                 [
                     'content' => $content,
