@@ -17,7 +17,7 @@ const { user } = useShared();
             <div>
                 <p class="text-sm text-muted">Привет,</p>
                 <h1 class="font-display text-2xl font-bold tracking-tight">
-                    {{ user?.first_name || 'друг' }}
+                    {{ user?.name || user?.first_name || 'друг' }}
                 </h1>
             </div>
 
