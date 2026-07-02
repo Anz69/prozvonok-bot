@@ -23,7 +23,7 @@ class SetMenuButton extends Command
     public function handle(Nutgram $bot): int
     {
         if ($this->option('reset')) {
-            $ok = $bot->setChatMenuButton(menu_button: MenuButtonDefault::make());
+            $ok = $bot->setChatMenuButton(menu_button: new MenuButtonDefault());
             $this->info($ok ? 'Кнопка меню сброшена на стандартную.' : 'Не удалось сбросить кнопку меню.');
 
             return $ok ? self::SUCCESS : self::FAILURE;
@@ -38,7 +38,7 @@ class SetMenuButton extends Command
         }
 
         $ok = $bot->setChatMenuButton(
-            menu_button: MenuButtonWebApp::make('🚀 Приложение', WebAppInfo::make(url: $url)),
+            menu_button: new MenuButtonWebApp('🚀 Приложение', WebAppInfo::make($url)),
         );
 
         $this->info($ok ? "Кнопка меню установлена на: {$url}" : 'Не удалось установить кнопку меню.');
