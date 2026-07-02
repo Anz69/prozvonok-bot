@@ -1,10 +1,11 @@
-# Caddy за Cloudflare. CF терминирует TLS для браузера, а до origin идёт по HTTPS
-# с самоподписанным сертификатом (Caddy `tls internal`) — режим Cloudflare SSL = "Full".
-# Никаких Let's Encrypt/ACME (за оранжевым облаком они конфликтуют).
-#
-# APP_DOMAIN=radistka.pro. Локально без домена — localhost (тоже self-signed).
+# Caddy — авто-HTTPS через Let's Encrypt (домен смотрит прямо на сервер, без Cloudflare).
+# Порты 80 и 443 должны быть открыты и доступны из интернета (ACME HTTP-01 challenge).
+# APP_DOMAIN=radistka.pro. Локально без домена — localhost (self-signed автоматически).
+{
+	email {$ACME_EMAIL:admin@radistka.pro}
+}
+
 {$APP_DOMAIN:localhost} {
-	tls internal
 	encode zstd gzip
 
 	# крупные загрузки баз номеров

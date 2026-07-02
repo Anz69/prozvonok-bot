@@ -110,11 +110,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/Anz69/prozvonok-bot/main/dep
 (app + nginx + **caddy** + mysql + redis + queue + scheduler + bot) → миграции и сидеры →
 сбрасывает webhook (бот на long-polling) → ставит кнопку-меню бота на Mini App.
 
-**Cloudflare (обязательно 2 настройки для radistka.pro):**
-1. **DNS** → A-запись `radistka.pro` → IP сервера, проксирование **включено** (оранжевое облако).
-2. **SSL/TLS → Overview → режим `Full`** (не Flexible и не Full strict).
-   Caddy на сервере отдаёт HTTPS с self-signed сертификатом (`tls internal`), Cloudflare
-   его принимает в режиме Full и терминирует TLS для браузера. Никаких Let's Encrypt/ACME.
+**DNS (домен смотрит прямо на сервер, без прокси):**
+1. A-запись `radistka.pro` → IP сервера (для Cloudflare — **серое облако**, DNS only).
+2. Открыть порты **80 и 443** — Caddy сам получит сертификат Let's Encrypt (ACME HTTP-01).
+   Никакой ручной возни с сертификатами.
 
 После деплоя:
 - Mini App: `https://radistka.pro/app` (кнопка «Открыть приложение» в боте).

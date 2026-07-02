@@ -12,8 +12,9 @@ DIR="${DIR:-/opt/prozvonok-bot}"
 : "${TELEGRAM_TOKEN:?Укажите TELEGRAM_TOKEN}"
 
 TELEGRAM_BOT_USERNAME="${TELEGRAM_BOT_USERNAME:-}"
-# Домен для HTTPS (за Cloudflare, режим SSL "Full"). Нужен для Telegram Mini App.
+# Домен для HTTPS (Caddy + Let's Encrypt, домен смотрит прямо на сервер). Нужен для Mini App.
 # По умолчанию — radistka.pro. APP_URL/MINIAPP_URL формируются автоматически.
+# Порты 80 и 443 должны быть открыты (ACME-проверка Let's Encrypt).
 APP_DOMAIN="${APP_DOMAIN:-radistka.pro}"
 if [ -n "${APP_DOMAIN}" ]; then
     APP_URL="${APP_URL:-https://${APP_DOMAIN}}"
