@@ -83,7 +83,10 @@ class HttpZvonokClient implements ZvonokClient
                 continue;
             }
 
-            $data = $response->json('data');
+            // Звонок отдаёт при успехе ГОЛЫЙ массив звонков [{...}], а при ошибке —
+            // объект {"status":"error","data":"..."}. Достаём звонки из обоих форматов.
+            $json = $response->json();
+            $data = (is_array($json) && array_key_exists('data', $json)) ? $json['data'] : $json;
             $call = $this->latestCall($data);
             if ($call === null) {
                 continue;
