@@ -22,10 +22,33 @@ return [
     'zvonok' => [
         'driver'       => env('ZVONOK_DRIVER', 'fake'), // fake | http
         'base_url'     => env('ZVONOK_BASE_URL', 'https://zvonok.com/manager/cabapi_external/api/v1'),
-        'api_key'      => env('ZVONOK_API_KEY'),
-        'campaign_id'  => env('ZVONOK_CAMPAIGN_ID'),
         'rate_limit'   => (int) env('ZVONOK_RATE_LIMIT', 20), // запросов в секунду (лимит API)
         'postback_secret' => env('ZVONOK_POSTBACK_SECRET'), // защита webhook
+
+        // Гео по умолчанию, если у задания не задан geo_code.
+        'default_geo'  => env('ZVONOK_DEFAULT_GEO', 'RU'),
+
+        // Отдельный аккаунт Звонок.com (public_key + campaign_id) на каждую страну (geo_code).
+        // Выбор аккаунта — по geo_code задания (см. HttpZvonokClient::account()).
+        // Если для страны ключи не заданы — фолбэк на legacy-пару ZVONOK_API_KEY/ZVONOK_CAMPAIGN_ID.
+        'accounts' => [
+            'RU' => [
+                'api_key'     => env('ZVONOK_RU_API_KEY', env('ZVONOK_API_KEY')),
+                'campaign_id' => env('ZVONOK_RU_CAMPAIGN_ID', env('ZVONOK_CAMPAIGN_ID')),
+            ],
+            'BY' => [
+                'api_key'     => env('ZVONOK_BY_API_KEY'),
+                'campaign_id' => env('ZVONOK_BY_CAMPAIGN_ID'),
+            ],
+            'KZ' => [
+                'api_key'     => env('ZVONOK_KZ_API_KEY'),
+                'campaign_id' => env('ZVONOK_KZ_CAMPAIGN_ID'),
+            ],
+        ],
+
+        // legacy-пара — общий фолбэк, если для страны не настроен свой аккаунт.
+        'api_key'      => env('ZVONOK_API_KEY'),
+        'campaign_id'  => env('ZVONOK_CAMPAIGN_ID'),
     ],
 
     // USDT TRC-20 — приём платежей (Part 2)

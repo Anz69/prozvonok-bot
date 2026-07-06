@@ -28,9 +28,21 @@ class HttpZvonokClient implements ZvonokClient
             ->retry(3, 1000, throw: false);
     }
 
-    private function key(): ?string
+    /**
+     * Аккаунт Звонок.com для страны: своя пара public_key + campaign_id на каждый geo_code.
+     * Фолбэк на legacy-пару, если для страны ключи не настроены.
+     *
+     * @return array{api_key: ?string, campaign_id: ?string}
+     */
+    private function account(?string $geo): array
     {
-        return config('dozvon.zvonok.api_key');
+        $geo = strtoupper($geo ?: (string) config('dozvon.zvonok.default_geo', 'RU'));
+        $account = (array) config("dozvon.zvonok.accounts.$geo", []);
+
+        return [
+            'api_key'     => $account['api_key'] ?? config('dozvon.zvonok.api_key'),
+            'campaign_id' => $account['campaign_id'] ?? config('dozvon.zvonok.campaign_id'),
+        ];
     }
 
     /** Не более rate_limit запросов в секунду. */
@@ -45,12 +57,13 @@ class HttpZvonokClient implements ZvonokClient
 
     public function createCalls(array $phones, array $options = []): string
     {
-        $campaign = (string) config('dozvon.zvonok.campaign_id');
+        $account = $this->account($options['geo'] ?? null);
+        $campaign = (string) $account['campaign_id'];
 
         foreach ($phones as $phone) {
             $this->throttle();
             $response = $this->http()->asForm()->post('/phones/call/', array_filter([
-                'public_key' => $this->key(),
+                'public_key' => $account['api_key'],
                 'campaign_id' => $campaign,
                 'phone' => $phone,
                 'text' => $options['text'] ?? null,
@@ -66,15 +79,16 @@ class HttpZvonokClient implements ZvonokClient
         return $campaign;
     }
 
-    public function fetchResults(string $campaignId, array $phones = []): array
+    public function fetchResults(string $campaignId, array $phones = [], array $options = []): array
     {
         $map = (array) Setting::get('zvonok_status_map', []);
+        $key = $this->account($options['geo'] ?? null)['api_key'];
         $results = [];
 
         foreach ($phones as $phone) {
             $this->throttle();
             $response = $this->http()->get('/phones/calls_by_phone/', [
-                'public_key' => $this->key(),
+                'public_key' => $key,
                 'campaign_id' => $campaignId,
                 'phone' => $phone,
             ]);

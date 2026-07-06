@@ -15,7 +15,7 @@ class FakeZvonokClient implements ZvonokClient
         return 'fake-' . Str::random(8);
     }
 
-    public function fetchResults(string $campaignId, array $phones = []): array
+    public function fetchResults(string $campaignId, array $phones = [], array $options = []): array
     {
         $operators = ['МТС', 'Билайн', 'МегаФон', 'Tele2'];
         $results = [];

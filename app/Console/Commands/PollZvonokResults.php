@@ -33,7 +33,7 @@ class PollZvonokResults extends Command
                     return;
                 }
 
-                $data = $client->fetchResults((string) $job->zvonok_campaign_id, $phones);
+                $data = $client->fetchResults((string) $job->zvonok_campaign_id, $phones, ['geo' => $job->geo_code]);
                 if ($data !== []) {
                     $results->applyResults($job, $data);
                     $processed++;

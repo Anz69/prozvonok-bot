@@ -17,6 +17,8 @@ class ZvonokHttpClientTest extends TestCase
     {
         parent::setUp();
         config()->set('dozvon.zvonok.base_url', 'https://zvonok.com/manager/cabapi_external/api/v1');
+        config()->set('dozvon.zvonok.default_geo', 'RU');
+        config()->set('dozvon.zvonok.accounts', []); // по умолчанию — только legacy-пара (фолбэк)
         config()->set('dozvon.zvonok.api_key', 'KEY123');
         config()->set('dozvon.zvonok.campaign_id', '555');
         Setting::put('zvonok_status_map', json_encode([
@@ -39,6 +41,36 @@ class ZvonokHttpClientTest extends TestCase
                 && $request['campaign_id'] === '555'
                 && $request['phone'] === '+79990000001';
         });
+    }
+
+    public function test_create_calls_uses_country_account_by_geo(): void
+    {
+        // У каждой страны свой аккаунт Звонок.com: public_key + campaign_id выбираются по geo.
+        config()->set('dozvon.zvonok.accounts', [
+            'RU' => ['api_key' => 'KEY_RU', 'campaign_id' => '111'],
+            'BY' => ['api_key' => 'KEY_BY', 'campaign_id' => '222'],
+            'KZ' => ['api_key' => 'KEY_KZ', 'campaign_id' => '333'],
+        ]);
+        Http::fake(['*' => Http::response(['status' => 'ok'], 200)]);
+
+        $campaign = (new HttpZvonokClient())->createCalls(['+375290000001'], ['geo' => 'BY']);
+
+        $this->assertSame('222', $campaign);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'phones/call/')
+            && $request['public_key'] === 'KEY_BY'
+            && $request['campaign_id'] === '222');
+    }
+
+    public function test_create_calls_falls_back_to_legacy_keys_when_geo_account_missing(): void
+    {
+        // Для страны без своего аккаунта — фолбэк на общую legacy-пару.
+        config()->set('dozvon.zvonok.accounts', ['RU' => ['api_key' => 'KEY_RU', 'campaign_id' => '111']]);
+        Http::fake(['*' => Http::response(['status' => 'ok'], 200)]);
+
+        $campaign = (new HttpZvonokClient())->createCalls(['+77010000001'], ['geo' => 'KZ']);
+
+        $this->assertSame('555', $campaign); // из legacy campaign_id (setUp)
+        Http::assertSent(fn ($request) => $request['public_key'] === 'KEY123' && $request['campaign_id'] === '555');
     }
 
     public function test_fetch_results_maps_statuses(): void
