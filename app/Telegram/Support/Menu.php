@@ -11,6 +11,7 @@ use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\KeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\ReplyKeyboardMarkup;
+use SergiX44\Nutgram\Telegram\Types\Keyboard\ReplyKeyboardRemove;
 
 /**
  * Экраны онбординга и главного экрана. Контент — инлайн (одно сообщение, Screen),
@@ -93,4 +94,29 @@ class Menu
         Screen::show($bot, BotText::render('captcha', ['target' => $captcha['target']]), $kb);
     }
 
+    /**
+     * Убрать нижнюю нав-клавиатуру на время онбординга (подписка/капча): до входа
+     * навигация не нужна. Если клавиатуры не было — ничего не делаем.
+     */
+    private static function dropLegacyReplyKeyboard(Nutgram $bot): void
+    {
+        /** @var BotUser $user */
+        $user = $bot->get('bot_user');
+        $state = $user->state ?? [];
+
+        if (empty($state['nav_kb'])) {
+            return;
+        }
+
+        try {
+            $msg = $bot->sendMessage('🔻', reply_markup: ReplyKeyboardRemove::make(true));
+            if ($msg) {
+                $bot->deleteMessage($bot->chatId(), $msg->message_id);
+            }
+        } catch (\Throwable) {
+        }
+
+        unset($state['nav_kb']);
+        $user->update(['state' => $state]);
+    }
 }

@@ -71,6 +71,40 @@ class BotFlowTest extends TestCase
         $this->bot->assertCalled('getChatMember'); // проверка подписки запустилась
     }
 
+    /**
+     * Регрессия: новый неподписанный юзер должен получить экран подписки на /start.
+     * Раньше тут падал фатал (Menu::dropLegacyReplyKeyboard не был объявлен) — бот молчал.
+     */
+    public function test_new_unsubscribed_user_gets_subscription_screen(): void
+    {
+        Setting::put('subscription_required', '1', 'bool');
+        \App\Models\RequiredChannel::create([
+            'chat_id' => '@testchannel',
+            'title' => 'Test',
+            'url' => 'https://t.me/testchannel',
+            'is_active' => true,
+        ]);
+        Cache::flush();
+
+        // Telegram отвечает, что юзер НЕ подписан → бот обязан показать экран подписки
+        $this->bot->willReceive([
+            'status' => 'left',
+            'user' => ['id' => self::UID, 'is_bot' => false, 'first_name' => 'Test'],
+        ]);
+
+        $this->text('/start');
+
+        $replied = false;
+        foreach ($this->bot->getRequestHistory() as $rr) {
+            $path = array_values($rr)[0]->getUri()->getPath();
+            if (in_array($path, ['sendMessage', 'editMessageText'], true)) {
+                $replied = true;
+            }
+        }
+
+        $this->assertTrue($replied, 'Новый неподписанный юзер должен получить ответ на /start, а не молчание');
+    }
+
     public function test_home_and_inline_navigation_edit_single_screen(): void
     {
         $this->disableOnboarding();
