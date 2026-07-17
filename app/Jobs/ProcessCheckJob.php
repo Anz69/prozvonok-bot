@@ -34,6 +34,13 @@ class ProcessCheckJob implements ShouldQueue
             return;
         }
 
+        // Идемпотентность: звонки уже поставлены (ретрай джобы, повторный dispatch,
+        // двойное нажатие) — НЕ отправляем номера в кампанию второй раз, иначе
+        // Звонок обзвонит одну и ту же базу несколько раз и спишет деньги повторно.
+        if ($job->status === CheckJob::STATUS_PROCESSING && $job->zvonok_campaign_id) {
+            return;
+        }
+
         // Создаём номера задания из входного файла (идемпотентно)
         if ($job->numbers()->doesntExist() && $job->input_path) {
             $parsed = $parser->parse(Storage::disk('local')->path($job->input_path), $job->geo_code);
