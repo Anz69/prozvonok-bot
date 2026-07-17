@@ -1,7 +1,7 @@
-/** Деньги «по-человечески»: до 5 знаков, без хвостовых нулей, разделитель тысяч. */
+/** Деньги «по-человечески»: до 2 знаков (как в кошельке), без хвостовых нулей. 5.776 → «5,78». */
 export function money(value) {
     const n = Number(value) || 0;
-    let s = n.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 5 });
+    let s = n.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     return s.replace(/ /g, ' ');
 }
 
