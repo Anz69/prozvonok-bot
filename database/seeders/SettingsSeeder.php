@@ -37,6 +37,7 @@ class SettingsSeeder extends Seeder
             ['large_payment_alert', 1000, 'float', 'admin', 'Порог крупного пополнения для алерта, $'],
             ['avg_processing_minutes', 15, 'int', 'limits', 'Среднее время обработки (мин)'],
             ['check_numbers_per_minute', 100, 'int', 'limits', 'Скорость обзвона (номеров/мин) для оценки времени готовности'],
+            ['check_timeout_minutes', 180, 'int', 'limits', 'Через сколько минут закрыть зависшие номера как НДЗ и выдать файл (0 = никогда)'],
             ['allowed_formats', json_encode(['xlsx', 'txt']), 'json', 'limits', 'Разрешённые форматы файлов'],
 
             // --- Звонок.com: маппинг статусов сервиса → answered/no_answer (раздел 4.4, TODO уточнить ключи) ---

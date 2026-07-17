@@ -14,12 +14,17 @@ Artisan::command('inspire', function () {
 |--------------------------------------------------------------------------
 */
 
+// ВАЖНО: withoutOverlapping(N) — короткий лок на N минут. По умолчанию Laravel держит
+// его 1440 мин (сутки): если процесс убили на середине (рестарт контейнера при деплое),
+// лок не освобождается и команда молча не запускается ЦЕЛЫЕ СУТКИ. Из-за этого
+// переставали собираться результаты обзвона и не выгружались базы.
+
 // Приём USDT и авто-зачисление
-Schedule::command('payments:poll')->everyMinute()->withoutOverlapping();
+Schedule::command('payments:poll')->everyMinute()->withoutOverlapping(5);
 
 // Премиум: уведомления и деактивация
 Schedule::command('premium:expire')->dailyAt('10:00');
 
 // Звонок.com: постановка отложенных заданий и опрос результатов
-Schedule::command('checks:dispatch-scheduled')->everyMinute()->withoutOverlapping();
-Schedule::command('checks:poll-results')->everyMinute()->withoutOverlapping();
+Schedule::command('checks:dispatch-scheduled')->everyMinute()->withoutOverlapping(5);
+Schedule::command('checks:poll-results')->everyMinute()->withoutOverlapping(10);
